@@ -8,12 +8,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 @SpringBootTest
 public class CryptoStatisticServiceSpringTest {
@@ -84,4 +86,20 @@ public class CryptoStatisticServiceSpringTest {
         assertEquals(0.0038444198296586265, statisticList.get(0).getNormalizedRange(), 0.001);
         assertEquals(0.002354788069073761, statisticList.get(1).getNormalizedRange(), 0.001);
     }
+
+    @Test
+    public void shouldReturnStatisticWithHighestNormalizedRangeForDay() {
+        CryptoCurrencyStatistic statistic = service.calculateHighestNormalizedRangeForDay(
+                LocalDate.of(2022, 1, 10));
+        assertEquals(0.0038444198296586265, statistic.getNormalizedRange(), 0.001);
+    }
+
+    @Test
+    public void shouldReturnNullWhenCallStatisticWithHighestNormalizedRangeForDayWithoutData() {
+        CryptoCurrencyStatistic statistic = service.calculateHighestNormalizedRangeForDay(
+                LocalDate.of(2022, 2, 10));
+        assertNull(statistic);
+    }
+
+
 }

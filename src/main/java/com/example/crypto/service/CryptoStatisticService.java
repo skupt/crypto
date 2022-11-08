@@ -1,5 +1,6 @@
 package com.example.crypto.service;
 
+import com.example.crypto.exception.CryptoNameValidationException;
 import com.example.crypto.helper.CryptoLoader;
 import com.example.crypto.model.*;
 import lombok.Setter;
@@ -79,7 +80,9 @@ public class CryptoStatisticService {
 
     public CryptoCurrencyStatistic calculateHighestNormalizedRangeForDay(LocalDate specificDay) {
         LocalDateTime date = LocalDateTime.of(specificDay, LocalTime.MIN);
-        return calculateDescendingCryptoCurrencyList(date, Duration.ofDays(1)).get(0);
+        List<CryptoCurrencyStatistic> statisticList = calculateDescendingCryptoCurrencyList(date, Duration.ofDays(1));
+        if (statisticList == null || statisticList.isEmpty()) return null;
+        return statisticList.get(0);
 
     }
 
@@ -103,8 +106,16 @@ public class CryptoStatisticService {
         statistic.setMin(new TimedValue(minPricedValue.getLocalDateTime(), minPricedValue.getPrice()));
         PricedValue maxPricedValue = Collections.max(orderedByPriceTimedValues);
         statistic.setMax(new TimedValue(maxPricedValue.getLocalDateTime(), maxPricedValue.getPrice()));
-        statistic.setNormalizedRange((statistic.getMax().getPrice() - statistic.getMin().getPrice()) / statistic.getMin().getPrice());
+        statistic.setNormalizedRange((statistic.getMax().getPrice() - statistic.getMin().getPrice())
+                / statistic.getMin().getPrice());
 
         return statistic;
+    }
+
+    public boolean validateCryptoName(String cryptoName) {
+        if (!currencyMap.containsKey(cryptoName))
+            throw new CryptoNameValidationException("Provided crypto '" + cryptoName
+                    + "' is not existed in our service");
+        return true;
     }
 }
