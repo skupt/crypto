@@ -68,7 +68,10 @@ Swagger is able on url: http://127.0.0.1:8080/swagger-ui/index.html
 
 Initially the cryptos are only five, but what if we want to include more? Will the recommendation service be able to scale?
 ------
-Yes, if you include any reasonable amount of cryptos you want it will work.
+Yes, if you include any reasonable amount of cryptos you want it will work. Besides this in a project was implemented
+LRU (least recently used) that reduced query execution time by 2 (lightweight request) - 30 (heavyweight requests)
+times.
+You can adjust it size with environment variable CRYPTO_CACHE_SIZE.
 
 New cryptos pop up every day, so we might need to safeguard recommendations service endpoints from not currently supported cryptos
 ------
