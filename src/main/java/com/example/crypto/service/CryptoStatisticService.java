@@ -1,67 +1,99 @@
 package com.example.crypto.service;
 
+import com.example.crypto.helper.CryptoLoader;
 import com.example.crypto.model.*;
+import lombok.Setter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.PostConstruct;
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.SortedSet;
-import java.util.TreeSet;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @PropertySource("classpath:application.properties")
 public class CryptoStatisticService {
-    @Value("crypto.cash.size")
+    @Value("${crypto.cash.size}")
+    @Setter
     private String cacheSizeStr = "1000";
+
+    @Value("${crypto.prices.path}")
+    @Setter
+    private String pathToCryptoPricesFolder = "src/main/resources/prices";
     private CurrencyCache<CacheKey, CryptoCurrencyStatistic> cache = new CurrencyCache<>(Integer.parseInt(cacheSizeStr));
+    private Map<String, CryptoCurrency> currencyMap;
+
+    @PostConstruct
+    public void init() throws IOException {
+        currencyMap = CryptoLoader.loadCryptoPrices(pathToCryptoPricesFolder);
+    }
 
     /**
      * Check cash, if hit is present then returns statistic from cache else  calculate and return new statistic.
+     * Actually method return statistic starting from 2000-01-01 00:00 with duration of 36500 days.
+     * This period in this app means statistic for period of all time of existing cryptocurrencies.
      *
-     * @param currency
+     * @param currencyName
      * @return CryptoCurrencyStatistic for whole available period
      */
-    public CryptoCurrencyStatistic getOrCalculateStatisticForWholeTime(CryptoCurrency currency) {
-        CacheKey cacheKey = new CacheKey(currency.getSymbol(), LocalDateTime.MIN, Duration.between(LocalDateTime.MAX,
-                LocalDateTime.MIN));
+    public CryptoCurrencyStatistic getOrCalculateStatisticForWholeTime(String currencyName) {
+        CryptoCurrency currency = currencyMap.get(currencyName);
+        CacheKey cacheKey = new CacheKey(currency.getSymbol(), LocalDateTime.of(2000, 1, 1, 0, 0),
+                Duration.ofDays(36500));
         CryptoCurrencyStatistic statistic = cache.get(cacheKey);
         if (statistic == null) {
-            statistic = calculateStatistic(currency, LocalDateTime.MIN, Duration.between(LocalDateTime.MAX,
-                    LocalDateTime.MIN));
+            statistic = calculateStatistic(currencyName, LocalDateTime.of(2000, 1, 1, 0, 0),
+                    Duration.ofDays(36500));
+
             cache.put(cacheKey, statistic);
         }
         return statistic;
     }
 
-    public CryptoCurrencyStatistic getOrCalculateStatistic(CryptoCurrency currency, LocalDateTime fromInclusive,
+    public CryptoCurrencyStatistic getOrCalculateStatistic(String currencyName, LocalDateTime fromInclusive,
                                                            Duration duration) {
+        CryptoCurrency currency = currencyMap.get(currencyName);
         CacheKey cacheKey = new CacheKey(currency.getSymbol(), fromInclusive, duration);
         CryptoCurrencyStatistic statistic = cache.get(cacheKey);
         if (statistic == null) {
-            statistic = calculateStatistic(currency, fromInclusive, duration);
+            statistic = calculateStatistic(currencyName, fromInclusive, duration);
             cache.put(cacheKey, statistic);
         }
         return statistic;
-
     }
 
-    public CryptoCurrencyStatistic calculateStatistic(CryptoCurrency currency, LocalDateTime fromInclusive, Duration duration) {
+    public List<CryptoCurrencyStatistic> calculateDescendingCryptoCurrencyList(LocalDateTime fromInclusive, Duration duration) {
+        SortedSet<CryptoCurrencyStatistic> statSortedSet = new TreeSet<>(Comparator.comparing(CryptoCurrencyStatistic::getNormalizedRange));
+        for (CryptoCurrency currency : currencyMap.values()) {
+            statSortedSet.add(getOrCalculateStatistic(currency.getSymbol(), fromInclusive, duration));
+        }
+        return statSortedSet.stream().collect(Collectors.toList());
+    }
+
+    public CryptoCurrencyStatistic calculateStatistic(String currencyName, LocalDateTime fromInclusive, Duration duration) {
+        CryptoCurrency currency = currencyMap.get(currencyName);
         SortedSet<TimedValue> filteredValues = currency.getValues()
                 .subSet((new TimedValue(fromInclusive, null)),
                         new TimedValue(fromInclusive.plus(duration), null));
 
         CryptoCurrencyStatistic statistic = new CryptoCurrencyStatistic();
+        statistic.setSymbol(currency.getSymbol());
+        statistic.setStart(fromInclusive);
+        statistic.setDuration(duration);
         statistic.setOldest(Collections.max(filteredValues));
         statistic.setNewest(Collections.min(filteredValues));
-        Comparator<TimedValue> byPriceComparator = Comparator.comparingDouble(t -> t.getPrice());
-        SortedSet<TimedValue> orderedByPriceTimedValues = new TreeSet<>(byPriceComparator);
-        orderedByPriceTimedValues.addAll(filteredValues);
-        statistic.setMin(Collections.min(orderedByPriceTimedValues));
-        statistic.setMax(Collections.max(orderedByPriceTimedValues));
+        SortedSet<PricedValue> orderedByPriceTimedValues = new TreeSet<>();
+        filteredValues.stream().map(t -> new PricedValue(t.getLocalDateTime(), t.getPrice()))
+                .forEach(orderedByPriceTimedValues::add);
+        PricedValue minPricedValue = Collections.min(orderedByPriceTimedValues);
+        statistic.setMin(new TimedValue(minPricedValue.getLocalDateTime(), minPricedValue.getPrice()));
+        PricedValue maxPricedValue = Collections.max(orderedByPriceTimedValues);
+        statistic.setMax(new TimedValue(maxPricedValue.getLocalDateTime(), maxPricedValue.getPrice()));
+        statistic.setNormalizedRange((statistic.getMax().getPrice() - statistic.getMin().getPrice()) / statistic.getMin().getPrice());
 
         return statistic;
     }

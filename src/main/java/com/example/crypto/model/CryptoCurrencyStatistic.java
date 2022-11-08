@@ -14,8 +14,5 @@ public class CryptoCurrencyStatistic {
     private TimedValue newest;
     private TimedValue min;
     private TimedValue max;
-//    private int yearStart;
-//    private int monthStart;
-//    private int dayOfMonthStar;
-
+    private double normalizedRange;
 }

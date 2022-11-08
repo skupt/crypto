@@ -10,9 +10,9 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -20,14 +20,15 @@ import java.util.stream.Collectors;
  */
 public class CryptoLoader {
 
-    public static Set<CryptoCurrency> loadCryptoPrices(String path) throws IOException {
-        Set<CryptoCurrency> cryptoCurrencySet = new HashSet<>();
+    public static Map<String, CryptoCurrency> loadCryptoPrices(String path) throws IOException {
+        Map<String, CryptoCurrency> cryptoCurrencyMap = new HashMap<>();
         List<Path> filePathList = loadFileNames(path);
         for (Path filePath : filePathList) {
-            cryptoCurrencySet.add(createCryptoCurrency(filePath));
+            CryptoCurrency cryptoCurrency = createCryptoCurrency(filePath);
+            cryptoCurrencyMap.put(cryptoCurrency.getSymbol(), createCryptoCurrency(filePath));
         }
 
-        return cryptoCurrencySet;
+        return cryptoCurrencyMap;
     }
 
     private static List<Path> loadFileNames(String path) throws IOException {
@@ -66,23 +67,23 @@ public class CryptoLoader {
         return value;
     }
 
-    public static void main(String[] args) throws IOException {
-        // getTimedValue
-        String line = "1641009600000,BTC,46813.21";
-        TimedValue timedValue = CryptoLoader.getTimedValue(line);
-        System.out.println(timedValue.toString());
-
-        //
-        System.out.println("createCryptoCurrency");
-        String filePath = "C:\\Users\\Vitalii_Rozaronov\\Documents\\projects\\inerview-tasks\\crypto\\src\\test\\resources\\prices\\BTC_values.csv";
-        CryptoCurrency cc = createCryptoCurrency(Paths.get(filePath));
-        cc.getValues().forEach(System.out::println);
-
-        System.out.println(cc);
-
-        System.out.println("get Class path");
-        CryptoLoader cl = new CryptoLoader();
-        System.out.println(System.getProperty("user.dir"));
-
-    }
+//    public static void main(String[] args) throws IOException {
+//        // getTimedValue
+//        String line = "1641009600000,BTC,46813.21";
+//        TimedValue timedValue = CryptoLoader.getTimedValue(line);
+//        System.out.println(timedValue.toString());
+//
+//        //
+//        System.out.println("createCryptoCurrency");
+//        String filePath = "C:\\Users\\Vitalii_Rozaronov\\Documents\\projects\\inerview-tasks\\crypto\\src\\test\\resources\\prices\\BTC_values.csv";
+//        CryptoCurrency cc = createCryptoCurrency(Paths.get(filePath));
+//        cc.getValues().forEach(System.out::println);
+//
+//        System.out.println(cc);
+//
+//        System.out.println("get Class path");
+//        CryptoLoader cl = new CryptoLoader();
+//        System.out.println(System.getProperty("user.dir"));
+//
+//    }
 }
