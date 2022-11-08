@@ -1,0 +1,9 @@
+version: '3'
+services:
+  crypto:
+    image: example/crypto
+    environment:
+      - CRYPTO_PRICES_PATH=/tmp/prices
+      - CRYPTO_CACHE_SIZE=1000
+    ports:
+      - "8080:8080"

@@ -96,7 +96,7 @@ public class CryptoStatisticService {
         statistic.setSymbol(currency.getSymbol());
         statistic.setStart(fromInclusive);
         statistic.setDuration(duration);
-        if (filteredValues.isEmpty()) return null; //if (filteredValues.isEmpty()) return statistic;
+        if (filteredValues.isEmpty()) return null;
         statistic.setOldest(Collections.max(filteredValues));
         statistic.setNewest(Collections.min(filteredValues));
         SortedSet<PricedValue> orderedByPriceTimedValues = new TreeSet<>();
