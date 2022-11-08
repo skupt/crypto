@@ -10,7 +10,9 @@ import org.springframework.stereotype.Service;
 import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -67,11 +69,18 @@ public class CryptoStatisticService {
     }
 
     public List<CryptoCurrencyStatistic> calculateDescendingCryptoCurrencyList(LocalDateTime fromInclusive, Duration duration) {
-        SortedSet<CryptoCurrencyStatistic> statSortedSet = new TreeSet<>(Comparator.comparing(CryptoCurrencyStatistic::getNormalizedRange));
+        SortedSet<CryptoCurrencyStatistic> statSortedSet = new TreeSet<>(Comparator.comparing(CryptoCurrencyStatistic::getNormalizedRange).reversed());
         for (CryptoCurrency currency : currencyMap.values()) {
-            statSortedSet.add(getOrCalculateStatistic(currency.getSymbol(), fromInclusive, duration));
+            CryptoCurrencyStatistic ccs = getOrCalculateStatistic(currency.getSymbol(), fromInclusive, duration);
+            if (ccs != null) statSortedSet.add(ccs);
         }
         return statSortedSet.stream().collect(Collectors.toList());
+    }
+
+    public CryptoCurrencyStatistic calculateHighestNormalizedRangeForDay(LocalDate specificDay) {
+        LocalDateTime date = LocalDateTime.of(specificDay, LocalTime.MIN);
+        return calculateDescendingCryptoCurrencyList(date, Duration.ofDays(1)).get(0);
+
     }
 
     public CryptoCurrencyStatistic calculateStatistic(String currencyName, LocalDateTime fromInclusive, Duration duration) {
@@ -84,6 +93,7 @@ public class CryptoStatisticService {
         statistic.setSymbol(currency.getSymbol());
         statistic.setStart(fromInclusive);
         statistic.setDuration(duration);
+        if (filteredValues.isEmpty()) return null; //if (filteredValues.isEmpty()) return statistic;
         statistic.setOldest(Collections.max(filteredValues));
         statistic.setNewest(Collections.min(filteredValues));
         SortedSet<PricedValue> orderedByPriceTimedValues = new TreeSet<>();

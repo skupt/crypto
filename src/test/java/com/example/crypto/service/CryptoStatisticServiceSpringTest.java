@@ -60,11 +60,28 @@ public class CryptoStatisticServiceSpringTest {
     @Test
     public void shouldReturnCorrectOrderedStatisticList() {
         List<CryptoCurrencyStatistic> statisticList = service.calculateDescendingCryptoCurrencyList(
-                LocalDateTime.MIN.of(2000, 1, 1, 0, 0), Duration.ofDays(365000));
+                LocalDateTime.of(2000, 1, 1, 0, 0), Duration.ofDays(365000));
         statisticList.forEach(e -> System.out.println(e.getSymbol() + " : " + e.getNormalizedRange()));
         Map<String, CryptoCurrencyStatistic> map = statisticList.stream().collect(Collectors.toMap(s -> s.getSymbol(), s -> s));
         assertEquals(0.04114398257311577, map.get("BTC").getNormalizedRange(), 0.01);
         assertEquals(0.11507936507936507, map.get("LTC").getNormalizedRange(), 0.01);
         assertEquals(0.6666666666666666, map.get("ETH").getNormalizedRange(), 0.01);
+    }
+
+    @Test
+    public void shouldReturnCorrectOrderedStatisticListForDayAbsent() {
+        List<CryptoCurrencyStatistic> statisticList = service.calculateDescendingCryptoCurrencyList(
+                LocalDateTime.of(2022, 6, 1, 0, 0), Duration.ofDays(365000));
+        statisticList.forEach(e -> System.out.println(e.getSymbol() + " : " + e.getNormalizedRange()));
+        assertEquals(0, statisticList.size());
+    }
+
+
+    @Test
+    public void shouldReturnCorrectOrderedStatisticListForDay() {
+        List<CryptoCurrencyStatistic> statisticList = service.calculateDescendingCryptoCurrencyList(
+                LocalDateTime.of(2022, 1, 10, 0, 0), Duration.ofDays(1));
+        assertEquals(0.0038444198296586265, statisticList.get(0).getNormalizedRange(), 0.001);
+        assertEquals(0.002354788069073761, statisticList.get(1).getNormalizedRange(), 0.001);
     }
 }
