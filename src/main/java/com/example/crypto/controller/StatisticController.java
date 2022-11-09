@@ -11,6 +11,8 @@ import com.example.crypto.service.CryptoStatisticService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -26,11 +28,12 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/cryptos")
 @Tag(name = "Cryptos' statistic", description = "Rest endpoints for providing crypto statistic info")
+@NoArgsConstructor
+@AllArgsConstructor
 public class StatisticController {
 
     @Autowired
     private CryptoStatisticService statisticService;
-
 
     @GetMapping(value = "range", params = {"sort"})
     @Operation(summary = "Returns a descending sorted list of all the cryptos, comparing the normalized range (i.e. (max-min)/min)")
