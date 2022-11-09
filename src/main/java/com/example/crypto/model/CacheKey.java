@@ -5,7 +5,9 @@ import lombok.Getter;
 import java.time.Duration;
 import java.time.LocalDateTime;
 
-
+/**
+ * Class represent a key for a cache of this application
+ */
 public final class CacheKey {
     private final String symbol;
     @Getter

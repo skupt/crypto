@@ -40,7 +40,7 @@ public class CryptoStatisticService {
      * Actually method return statistic starting from 2000-01-01 00:00 with duration of 36500 days.
      * This period in this app means statistic for period of all time of existing cryptocurrencies.
      *
-     * @param currencyName
+     * @param currencyName String The name of cryptocurrency (symbol, like 'BTC' etc.)
      * @return CryptoCurrencyStatistic for whole available period
      */
     public CryptoCurrencyStatistic getOrCalculateStatisticForWholeTime(String currencyName) {
@@ -57,6 +57,14 @@ public class CryptoStatisticService {
         return statistic;
     }
 
+    /**
+     * Check cash, if hit is present then returns statistic from cache else calculate and return new statistic.
+     *
+     * @param currencyName  String The name of cryptocurrency (symbol, like 'BTC' etc.)
+     * @param fromInclusive LocalDateTime for start period (inclusive)
+     * @param duration      Duration for duration of period
+     * @return
+     */
     public CryptoCurrencyStatistic getOrCalculateStatistic(String currencyName, LocalDateTime fromInclusive,
                                                            Duration duration) {
         CryptoCurrency currency = currencyMap.get(currencyName);
@@ -69,6 +77,14 @@ public class CryptoStatisticService {
         return statistic;
     }
 
+    /**
+     * The method returns a list of CryptoCurrency statistics for a period of time limited by a starting point in time
+     * and a duration.
+     *
+     * @param fromInclusive LocalDateTime for start period (inclusive)
+     * @param duration      Duration for duration of period
+     * @return List<CryptoCurrencyStatistic>
+     */
     public List<CryptoCurrencyStatistic> calculateDescendingCryptoCurrencyList(LocalDateTime fromInclusive, Duration duration) {
         SortedSet<CryptoCurrencyStatistic> statSortedSet = new TreeSet<>(Comparator.comparing(CryptoCurrencyStatistic::getNormalizedRange).reversed());
         for (CryptoCurrency currency : currencyMap.values()) {
@@ -78,6 +94,12 @@ public class CryptoStatisticService {
         return statSortedSet.stream().collect(Collectors.toList());
     }
 
+    /**
+     * Method CryptoCurrencyStatistic instance for  crypto with the highest normalized range for a specific day
+     *
+     * @param specificDay The day to calculate ranges and to choose crypto with highest range.
+     * @return CryptoCurrencyStatistic instance
+     */
     public CryptoCurrencyStatistic calculateHighestNormalizedRangeForDay(LocalDate specificDay) {
         LocalDateTime date = LocalDateTime.of(specificDay, LocalTime.MIN);
         List<CryptoCurrencyStatistic> statisticList = calculateDescendingCryptoCurrencyList(date, Duration.ofDays(1));
@@ -86,6 +108,14 @@ public class CryptoStatisticService {
 
     }
 
+    /**
+     * Method calculates CryptoCurrencyStatistic for particular cryptocurrency for period in time
+     *
+     * @param currencyName  String The name of cryptocurrency (symbol, like 'BTC' etc.)
+     * @param fromInclusive LocalDateTime for start period (inclusive)
+     * @param duration      Duration for duration of period
+     * @return CryptoCurrencyStatistic
+     */
     public CryptoCurrencyStatistic calculateStatistic(String currencyName, LocalDateTime fromInclusive, Duration duration) {
         CryptoCurrency currency = currencyMap.get(currencyName);
         SortedSet<TimedValue> filteredValues = currency.getValues()

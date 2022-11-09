@@ -67,23 +67,4 @@ public class CryptoLoader {
         return value;
     }
 
-//    public static void main(String[] args) throws IOException {
-//        // getTimedValue
-//        String line = "1641009600000,BTC,46813.21";
-//        TimedValue timedValue = CryptoLoader.getTimedValue(line);
-//        System.out.println(timedValue.toString());
-//
-//        //
-//        System.out.println("createCryptoCurrency");
-//        String filePath = "C:\\Users\\Vitalii_Rozaronov\\Documents\\projects\\inerview-tasks\\crypto\\src\\test\\resources\\prices\\BTC_values.csv";
-//        CryptoCurrency cc = createCryptoCurrency(Paths.get(filePath));
-//        cc.getValues().forEach(System.out::println);
-//
-//        System.out.println(cc);
-//
-//        System.out.println("get Class path");
-//        CryptoLoader cl = new CryptoLoader();
-//        System.out.println(System.getProperty("user.dir"));
-//
-//    }
 }
