@@ -11,8 +11,9 @@ import com.example.crypto.service.CryptoStatisticService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -29,16 +30,20 @@ import java.util.List;
 @RequestMapping("/api/v1/cryptos")
 @Tag(name = "Cryptos' statistic", description = "Rest endpoints for providing crypto statistic info")
 @NoArgsConstructor
-@AllArgsConstructor
 public class StatisticController {
-
+    Logger logger = LoggerFactory.getLogger(StatisticController.class);
     @Autowired
     private CryptoStatisticService statisticService;
+
+    public StatisticController(CryptoStatisticService service) {
+        this.statisticService = service;
+    }
 
     @GetMapping(value = "range", params = {"sort"})
     @Operation(summary = "Returns a descending sorted list of all the cryptos, comparing the normalized range (i.e. (max-min)/min)")
     public List<CryptoRange> allCryptoForAllData(@Parameter(description = "sort order, possible value 'desc'")
                                                  @RequestParam("sort") String sort) {
+        logger.trace("Enter method allCryptoForAllData. Time: " + System.currentTimeMillis());
         List<CryptoRange> descListCryptos = new ArrayList<>();
         if (sort.equals("desc")) {
             statisticService.calculateDescendingCryptoCurrencyList(LocalDateTime.of(2000, 1, 1, 0, 0),
@@ -52,6 +57,7 @@ public class StatisticController {
             throw new WrongParameterValueException("Check values for request params 'sort'," +
                     " possible value is 'desc'");
         }
+        logger.trace("Exit method allCryptoForAllData. Time: " + System.currentTimeMillis());
         return descListCryptos;
     }
 
@@ -59,6 +65,7 @@ public class StatisticController {
     @Operation(summary = "Returns the oldest/newest/min/max values for a requested crypto for all available data")
     public CryptoCurrencyStatisticForAllTime statisticForParticularCryptoForAllData(
             @Parameter(description = "crypto name (symbol)") @RequestParam("crypto") String crypto) {
+        logger.trace("Enter method statisticForParticularCryptoForAllData. Time: " + System.currentTimeMillis());
         statisticService.validateCryptoName(crypto);
         CryptoCurrencyStatisticForAllTime cryptoCurrencyStatisticForAllTime = new CryptoCurrencyStatisticForAllTime();
         CryptoCurrencyStatistic currencyStatistic = statisticService.getOrCalculateStatisticForWholeTime(crypto);
@@ -67,6 +74,7 @@ public class StatisticController {
         cryptoCurrencyStatisticForAllTime.setNewest(currencyStatistic.getNewest().getPrice());
         cryptoCurrencyStatisticForAllTime.setOldest(currencyStatistic.getOldest().getPrice());
         cryptoCurrencyStatisticForAllTime.setSymbol(currencyStatistic.getSymbol());
+        logger.trace("Exit method statisticForParticularCryptoForAllData. Time: " + System.currentTimeMillis());
         return cryptoCurrencyStatisticForAllTime;
     }
 
@@ -74,6 +82,8 @@ public class StatisticController {
     @Operation(summary = "Returns the crypto with the highest normalized range for a specific day")
     public CryptoRange highestRangeForSpecificDay(@Parameter(description = "string date in ISO format like YYYY-MM-DD")
                                                   @RequestParam("date") String date) {
+        logger.trace("Enter method highestRangeForSpecificDay. Time: " + System.currentTimeMillis());
+
         LocalDate localDate = null;
         try {
             localDate = LocalDate.parse(date, DateTimeFormatter.ISO_DATE);
@@ -87,6 +97,7 @@ public class StatisticController {
             throw new NotFoundException("No data found for requested date: " + localDate);
         cryptoRange.setCrypto(currencyStatistic.getSymbol());
         cryptoRange.setRange(currencyStatistic.getNormalizedRange());
+        logger.trace("Exit method highestRangeForSpecificDay. Time: " + System.currentTimeMillis());
         return cryptoRange;
     }
 
