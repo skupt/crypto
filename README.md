@@ -93,3 +93,5 @@ to build and run project in cluster that contains 1 crypto service in 2 clicks.
 
 Malicious users will always exist, so it will be really beneficial if at least we can rate limit them (based on IP)
 -----
+Malicious users are limited by IpFilter class that implemented in `ip-filter` branch. Default settings are not more
+than 10 requests/minute starting from second reset of counter (first time it allow 20 requests/min)
